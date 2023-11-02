@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import { messageHandler } from '@estruyf/vscode/dist/client';
 
 class Message{
   time: Date = new Date() ;
@@ -67,9 +68,20 @@ Threadobj.display();
 SubmitMessageRequestobj1.display();
 SubmitMessageRequestobj2.display();
 function App() {
-  const [message, setMessage] = useState(Threadobj.Messages)
+  const [thread, setThread] = useState(Threadobj.Messages)
+  const [message,setMessage] = useState<string>("")
   // const [displayMsg,setDisplayMsg] = useState<boolean>(true)
   let msg = ''
+  
+  const sendMessage = () => {
+    messageHandler.send('POST_DATA', { msgs: 'Hello from the webview' });
+  };
+  const requestData = () => {
+    messageHandler.request<string>('GET_DATA').then((msgs) => {
+      setMessage(msgs);
+    });
+  };
+  requestData()
   return (
     <>
       <div className='ChatTemplate'>
@@ -102,9 +114,10 @@ function App() {
             let SubmitMessageRequestobj3= new SubmitMessageRequest('1A2B3C',Messageobj3)
             SubmitMessageRequestobj3.display()
             let data = [...Threadobj.Messages,Messageobj3]
-            setMessage(data)
+            setThread(data)
             Threadobj.Messages.push(Messageobj3)
             Threadobj.display();
+            sendMessage;
           }}>
             Send Msg</button>
         </div>
