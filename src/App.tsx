@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import './App.css'
 import { messageHandler } from '@estruyf/vscode/dist/client';
+import { Button, Modal, Space } from 'antd';
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 class Message{
   time: Date = new Date() ;
@@ -18,9 +21,9 @@ class Message{
  } 
 }
 class Data{
-  Type: number = 0;
+  Type: string = '';
   Source:string = '';
-  constructor(Type:number,Source:string){
+  constructor(Type:string,Source:string){
     this.Type = Type;
     this.Source = Source;
   }
@@ -31,14 +34,14 @@ class Data{
 }
 class Thread{
    ThreadId: string = '';
-   Messages: Message[];
-   constructor(ThreadId:string,Messages:Message[]){
+   Content: Message[];
+   constructor(ThreadId:string,Content:Message[]){
     this.ThreadId = ThreadId;
-    this.Messages = Messages;
+    this.Content = Content;
    }
    display():void { 
     console.log("ThreadId is  :   "+this.ThreadId)
-    console.log("Messages Array has  :   "+JSON.stringify(this.Messages))
+    console.log("Content Array has  :   "+JSON.stringify(this.Content))
  } 
 }
 class SubmitMessageRequest{
@@ -53,9 +56,9 @@ class SubmitMessageRequest{
     console.log("AddedMessages is  :   "+JSON.stringify(this.AddedMessage))
  } 
 }
-var Dataobj1 = new Data(3,'Change This to A');
+var Dataobj1 = new Data('url','https://stackoverflow.com/questions/69243006/how-to-pass-data-from-one-js-file-to-another-js-file-through-app-js-in-reactjs');
 var Messageobj1 = new Message(new Date(),'Karthik',Dataobj1);
-var Dataobj2 = new Data(3,'Change This to B');
+var Dataobj2 = new Data('text','Change This to B');
 var Messageobj2 = new Message(new Date(),'Vishwanath',Dataobj2);
 var Threadobj = new Thread('1A2B3C',[Messageobj1,Messageobj2]);
 var SubmitMessageRequestobj1 = new SubmitMessageRequest('1A2B3C',Messageobj1);
@@ -68,7 +71,7 @@ Threadobj.display();
 SubmitMessageRequestobj1.display();
 SubmitMessageRequestobj2.display();
 function App() {
-  const [thread, setThread] = useState(Threadobj.Messages)
+  const [thread, setThread] = useState(Threadobj.Content)
   const [message,setMessage] = useState<string>("")
   // const [displayMsg,setDisplayMsg] = useState<boolean>(true)
   let msg = ''
@@ -87,11 +90,12 @@ function App() {
       <div className='ChatTemplate'>
         <div className='MessageDisplay'>
             {
-            Threadobj.Messages.map((item,index)=>{
+            thread.map((item,index)=>{
                   return(
                   <div className='MessageContent'>
                     <p className='MessageSender'>{item.senderId}</p> 
-                    <p>{item.data.Source}</p>
+                    {item.data.Type == 'text' && <Markdown className='ReactMarkdown' remarkPlugins={[remarkGfm]}>{item.data.Source}</Markdown>}
+                    {item.data.Type != 'text' && <a href = {item.data.Source}>{item.data.Source}</a>}
                     <p className='MessageTime'>{item.time.toLocaleTimeString()}</p>
                   </div>
                   )
@@ -107,17 +111,30 @@ function App() {
           <button className='SendMessageBtn' onClick={()=>{
             
             // message.push(msg)
-            let Dataobj3 = new Data(3,msg)
-            Dataobj3.display();
-            let Messageobj3 = new Message(new Date(),'Karthik',Dataobj3);
-            Messageobj3.display();
-            let SubmitMessageRequestobj3= new SubmitMessageRequest('1A2B3C',Messageobj3)
-            SubmitMessageRequestobj3.display()
-            let data = [...Threadobj.Messages,Messageobj3]
-            setThread(data)
-            Threadobj.Messages.push(Messageobj3)
-            Threadobj.display();
-            sendMessage;
+            
+             Modal.confirm({
+              title: 'Confirm',
+              content: <Markdown remarkPlugins={[remarkGfm]}>{msg}</Markdown>,
+              footer: (_, { OkBtn, CancelBtn }) => (
+                <>
+                  <Button>Custom Button</Button>
+                  <CancelBtn />
+                  <Button onClick={ ()=>{
+                    let Dataobj3 = new Data('text',msg)
+                    Dataobj3.display();
+                    let Messageobj3 = new Message(new Date(),'Karthik',Dataobj3);
+                    Messageobj3.display();
+                    let SubmitMessageRequestobj3= new SubmitMessageRequest('1A2B3C',Messageobj3)
+                    SubmitMessageRequestobj3.display()
+                    let data = [...Threadobj.Content,Messageobj3]
+                    setThread(data)
+                    Threadobj.Content.push(Messageobj3)
+                    Threadobj.display();
+                    sendMessage;
+                  }}>Ok</Button>
+                </>
+              ),
+            });
           }}>
             Send Msg</button>
         </div>
